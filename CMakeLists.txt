@@ -11,6 +11,8 @@ function(ADD_XEX executable_name)
         -C ${CMAKE_SOURCE_DIR}/x65.cfg
         -Ln ${CMAKE_CURRENT_BINARY_DIR}/${executable_name}.lab
         --mapfile ${CMAKE_CURRENT_BINARY_DIR}/${executable_name}.map
+        -Wa --listing,${CMAKE_CURRENT_BINARY_DIR}/${executable_name}.lst
+        -Wl --dbgfile,${CMAKE_CURRENT_BINARY_DIR}/${executable_name}.dbg
     )
     set_target_properties(${executable_name} PROPERTIES
         OUTPUT_NAME ${executable_name} SUFFIX ".xex"
