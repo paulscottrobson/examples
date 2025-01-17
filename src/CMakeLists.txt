@@ -1,4 +1,4 @@
-add_xex(loop)
-target_sources(loop PRIVATE
-    loop.c
+add_xex(swboy)
+target_sources(swboy PRIVATE
+    cgia/swboy.c
 )
