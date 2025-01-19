@@ -25,7 +25,7 @@ static uint8_t display_list[] = {
     (0 & 0xFF), ((0 >> 8) & 0xFF),                             // LCG
     0x70, 0x70, 0x70, 0x70, 0x70,                              // 5x 8 empty background lines
     0x70, 0x70, 0x70, 0x70, 0x70,                              // 5x 8 empty background lines
-    0x44, 0x00, 0x54, 0x1A,                                    // common background and foreground colors
+    0x84, 0x00, 0x94, 0x1A,                                    // common background and foreground colors
     0x0C, 0x0C, 0x0C, 0x0C, 0x0C,                              // 5x MODE5
     0x0C, 0x0C, 0x0C, 0x0C, 0x0C,                              // 5x MODE5
     0x0C, 0x0C, 0x0C, 0x0C, 0x0C,                              // 5x MODE5
