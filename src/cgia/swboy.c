@@ -9,16 +9,16 @@ void init()
     CGIA.planes = 0b00000000;
 
     // configure plane0
-    CGIA.plane[0].regs.bckgnd.flags = PLANE_MASK_DOUBLE_WIDTH; // multicolor double-width
-    CGIA.plane[0].regs.bckgnd.row_height = 7;                  // 8 rows per character
-    CGIA.plane[0].regs.bckgnd.border_columns = border_columns;
-    CGIA.plane[0].regs.bckgnd.stride = 0;
-    CGIA.plane[0].regs.bckgnd.scroll_x = 0;
-    CGIA.plane[0].regs.bckgnd.offset_x = 0;
-    CGIA.plane[0].regs.bckgnd.scroll_y = 0;
-    CGIA.plane[0].regs.bckgnd.offset_y = 0;
-    CGIA.plane[0].regs.bckgnd.shared_color[0] = 0;
-    CGIA.plane[0].regs.bckgnd.shared_color[1] = 0;
+    CGIA.plane[0].bckgnd.flags = PLANE_MASK_DOUBLE_WIDTH; // multicolor double-width
+    CGIA.plane[0].bckgnd.row_height = 7;                  // 8 rows per character
+    CGIA.plane[0].bckgnd.border_columns = border_columns;
+    CGIA.plane[0].bckgnd.stride = 0;
+    CGIA.plane[0].bckgnd.scroll_x = 0;
+    CGIA.plane[0].bckgnd.offset_x = 0;
+    CGIA.plane[0].bckgnd.scroll_y = 0;
+    CGIA.plane[0].bckgnd.offset_y = 0;
+    CGIA.plane[0].bckgnd.shared_color[0] = 0;
+    CGIA.plane[0].bckgnd.shared_color[1] = 0;
 
     for (i = 0; i < sizeof(tile_map); ++i)
     {

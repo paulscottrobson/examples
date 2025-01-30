@@ -64,54 +64,51 @@
 
 #define CGIA_COLUMN_PX 8
 
-struct cgia_plane_t
+union cgia_plane_regs
 {
-    union cgia_plane_regs
+    struct cgia_bckgnd_regs
     {
-        struct cgia_bckgnd_regs
-        {
-            uint8_t flags;
-            uint8_t border_columns;
-            uint8_t row_height;
-            uint8_t stride;
-            int8_t scroll_x;
-            int8_t offset_x;
-            int8_t scroll_y;
-            int8_t offset_y;
-            uint8_t shared_color[2];
-        } bckgnd;
+        uint8_t flags;
+        uint8_t border_columns;
+        uint8_t row_height;
+        uint8_t stride;
+        int8_t scroll_x;
+        int8_t offset_x;
+        int8_t scroll_y;
+        int8_t offset_y;
+        uint8_t shared_color[2];
+    } bckgnd;
 
-        struct cgia_ham_regs
-        {
-            uint8_t flags;
-            uint8_t border_columns;
-            uint8_t row_height;
-            uint8_t reserved[5];
-            uint8_t base_color[8];
-        } ham;
+    struct cgia_ham_regs
+    {
+        uint8_t flags;
+        uint8_t border_columns;
+        uint8_t row_height;
+        uint8_t reserved[5];
+        uint8_t base_color[8];
+    } ham;
 
-        struct cgia_affine_regs
-        {
-            uint8_t flags;
-            uint8_t border_columns;
-            uint8_t row_height;
-            uint8_t texture_bits; // 2-0 texture_width_bits, 6-4 texture_height_bits
-            int16_t u;
-            int16_t v;
-            int16_t du;
-            int16_t dv;
-            int16_t dx;
-            int16_t dy;
-        } affine;
+    struct cgia_affine_regs
+    {
+        uint8_t flags;
+        uint8_t border_columns;
+        uint8_t row_height;
+        uint8_t texture_bits; // 2-0 texture_width_bits, 6-4 texture_height_bits
+        int16_t u;
+        int16_t v;
+        int16_t du;
+        int16_t dv;
+        int16_t dx;
+        int16_t dy;
+    } affine;
 
-        struct cgia_sprite_regs
-        {
-            uint8_t active; // bitmask for active sprites
-            uint8_t border_columns;
-            int8_t start_y;
-            int8_t stop_y;
-        } sprite;
-    } regs;
+    struct cgia_sprite_regs
+    {
+        uint8_t active; // bitmask for active sprites
+        uint8_t border_columns;
+        int8_t start_y;
+        int8_t stop_y;
+    } sprite;
 };
 
 #define CGIA_PLANES                 4
@@ -150,7 +147,7 @@ struct cgia_t
     uint8_t back_color;
     uint8_t _reserved_planes[8 - 2];
     uint16_t offset[CGIA_PLANES]; // DisplayList or SpriteDescriptor table start
-    struct cgia_plane_t plane[CGIA_PLANES];
+    union cgia_plane_regs plane[CGIA_PLANES];
 };
 
 #define CGIA_REG_PLANES      (offsetof(struct cgia_t, planes))
