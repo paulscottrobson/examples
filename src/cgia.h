@@ -1,4 +1,4 @@
-#include "./types.h"
+#include "sys/types.h"
 
 /**
     bit 3 unset (0-7) - instructions:
@@ -44,12 +44,28 @@
    11   another "background" color
 */
 
+/*
+   Hold-And-Modify MODE6
+
+   HAM commands are 6bit each, 4 screen pixels packed in 3 bytes.
+   [CCCDDD] - C -command bit, D - data bit
+
+    000 - load base color index at DDD (one of 8 base colors)
+    001 - blend current color with color at DDD
+
+    CCS - CC:
+          01 - Modify Red channel
+          10 - Modify Green channel
+          11 - Modify Blue channel
+
+          S: sign, 0 +delta, 1 -delta
+          DDD: delta (0 offsetted, so 000 means 1)
+*/
+
 #define CGIA_COLUMN_PX 8
 
 struct cgia_plane_t
 {
-    uint16_t offset; // Current DisplayList or SpriteDescriptor table start
-
     union cgia_plane_regs
     {
         struct cgia_bckgnd_regs
@@ -110,15 +126,30 @@ struct cgia_plane_t
 #define PLANE_MASK_BORDER_TRANSPARENT 0b00001000
 #define PLANE_MASK_DOUBLE_WIDTH       0b00010000
 
+struct cgia_pwm_t
+{
+    uint16_t freq;
+    uint8_t duty;
+    uint8_t _reserved;
+};
+
+#define CGIA_PWMS 2
+
 struct cgia_t
 {
-    uint8_t planes; // [TTTTEEEE] EEEE - enable bits, TTTT - type (0 bckgnd, 1 sprite)
+    uint8_t mode; // reserved
 
     uint8_t bckgnd_bank;
     uint8_t sprite_bank;
+    uint8_t _reserved[32 - 3];
 
+    struct cgia_pwm_t pwm[CGIA_PWMS];
+    struct cgia_pwm_t _reserved_pwm[4 - CGIA_PWMS];
+
+    uint8_t planes; // [TTTTEEEE] EEEE - enable bits, TTTT - type (0 bckgnd, 1 sprite)
     uint8_t back_color;
-
+    uint8_t _reserved_planes[8 - 2];
+    uint16_t offset[CGIA_PLANES]; // DisplayList or SpriteDescriptor table start
     struct cgia_plane_t plane[CGIA_PLANES];
 };
 

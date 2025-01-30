@@ -33,7 +33,7 @@ void init()
     // fix DL looping
     *((WORD *)(display_list + sizeof(display_list) - 2)) = (WORD)display_list;
     // point plane0 to DL
-    CGIA.plane[0].offset = (WORD)display_list;
+    CGIA.offset[0] = (WORD)display_list;
 
     // activate plane0
     CGIA.planes = 0b00000001;

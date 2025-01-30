@@ -1,5 +1,7 @@
 #include "sys/types.h"
 
+static const uint16_t text_mode_fg_color = 150; // 0x96
+static const uint16_t text_mode_bg_color = 145; // 0x91
 static const uint16_t text_mode_video_offset = 0x0000;
 static const uint16_t text_mode_color_offset = 0x1000;
 static const uint16_t text_mode_bkgnd_offset = 0x2000;
