@@ -51,9 +51,12 @@
     sprite_bank .byte
                 .byte (16-3)    ; reserved
 
-                .word           ; reserved
-    raster      .byte
-                .byte (16-3)    ; reserved
+    raster      .word
+                .byte (6)       ; reserved
+    int_raster  .word
+    int_enable  .byte
+    int_status  .byte
+                .byte (4)       ; reserved
 
     pwm0        .tag CGIA_PWM
     pwm1        .tag CGIA_PWM

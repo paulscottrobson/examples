@@ -1,5 +1,7 @@
 #include "sys/types.h"
 
+#define CGIA_COLUMN_PX (8)
+
 /**
     bit 3 unset (0-7) - instructions:
     Bits 0-2 encode the instruction:
@@ -62,9 +64,9 @@
           DDD: delta (0 offsetted, so 000 means 1)
 */
 
-#define CGIA_COLUMN_PX 8
+#define CGIA_PLANE_REGS_NO (16)
 
-union cgia_plane_regs
+union cgia_plane_regs_t
 {
     struct cgia_bckgnd_regs
     {
@@ -109,10 +111,13 @@ union cgia_plane_regs
         int8_t start_y;
         int8_t stop_y;
     } sprite;
+
+    uint8_t reg[CGIA_PLANE_REGS_NO];
 };
 
-#define CGIA_PLANES                 4
-#define CGIA_AFFINE_FRACTIONAL_BITS 8
+#define CGIA_PLANES                 (4)
+#define CGIA_AFFINE_FRACTIONAL_BITS (8)
+#define CGIA_MAX_DL_INSTR           (32)
 
 // plane flags:
 // 0 - color 0 is transparent
@@ -130,7 +135,7 @@ struct cgia_pwm_t
     uint8_t _reserved;
 };
 
-#define CGIA_PWMS 2
+#define CGIA_PWMS (2)
 
 struct cgia_t
 {
@@ -138,7 +143,14 @@ struct cgia_t
 
     uint8_t bckgnd_bank;
     uint8_t sprite_bank;
-    uint8_t _reserved[32 - 3];
+    uint8_t _reserved[16 - 3];
+
+    uint16_t raster;
+    uint8_t _raster_res1[6];
+    uint16_t int_raster; // Line to generate raster interrupt.
+    uint8_t int_enable;  // Interrupt flags. [VBI DLI RSI x x x x x]
+    uint8_t int_status;  // Interrupt flags. [VBI DLI RSI x x x x x]
+    uint8_t _raster_res2[4];
 
     struct cgia_pwm_t pwm[CGIA_PWMS];
     struct cgia_pwm_t _reserved_pwm[4 - CGIA_PWMS];
@@ -147,13 +159,27 @@ struct cgia_t
     uint8_t back_color;
     uint8_t _reserved_planes[8 - 2];
     uint16_t offset[CGIA_PLANES]; // DisplayList or SpriteDescriptor table start
-    union cgia_plane_regs plane[CGIA_PLANES];
+    union cgia_plane_regs_t plane[CGIA_PLANES];
 };
 
+// register indices
+#define CGIA_REG_MODE        (offsetof(struct cgia_t, mode))
+#define CGIA_REG_BCKGND_BANK (offsetof(struct cgia_t, bckgnd_bank))
+#define CGIA_REG_SPRITE_BANK (offsetof(struct cgia_t, sprite_bank))
+#define CGIA_REG_RASTER      (offsetof(struct cgia_t, raster))
+#define CGIA_REG_INT_RASTER  (offsetof(struct cgia_t, int_raster))
+#define CGIA_REG_INT_ENABLE  (offsetof(struct cgia_t, int_enable))
+#define CGIA_REG_INT_STATUS  (offsetof(struct cgia_t, int_status))
 #define CGIA_REG_PLANES      (offsetof(struct cgia_t, planes))
-#define CGIA_REG_BCKGND_BANK (offsetof(struct cgia_t, planes))
-#define CGIA_REG_SPRITE_BANK (offsetof(struct cgia_t, planes))
-#define CGIA_REG_BACK_COLOR  (offsetof(struct cgia_t, planes))
+#define CGIA_REG_BACK_COLOR  (offsetof(struct cgia_t, back_color))
+#define CGIA_REG_PWM_0_FREQ  (0x20) // PWM channel 0 frequency.
+#define CGIA_REG_PWM_0_DUTY  (0x22) // PWM channel 0 duty-cycle.
+#define CGIA_REG_PWM_1_FREQ  (0x24) // PWM channel 1 frequency.
+#define CGIA_REG_PWM_1_DUTY  (0x26) // PWM channel 1 duty-cycle.
+
+#define CGIA_REG_INT_FLAG_VBI 0b10000000
+#define CGIA_REG_INT_FLAG_DLI 0b01000000
+#define CGIA_REG_INT_FLAG_RSI 0b00100000
 
 struct cgia_sprite_t
 {
@@ -169,9 +195,8 @@ struct cgia_sprite_t
                               // this is a built-in sprite multiplexer
 };
 
-#define CGIA_SPRITES 8
-
-#define SPRITE_MAX_WIDTH 8
+#define CGIA_SPRITES     (8)
+#define SPRITE_MAX_WIDTH (8)
 
 // sprite flags:
 // 0-2 - width in bytes
