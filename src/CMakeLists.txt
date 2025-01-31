@@ -14,3 +14,8 @@ add_xex(vbl)
 target_sources(vbl PRIVATE
     cgia/vbl.asm
 )
+
+add_xex(rsi)
+target_sources(rsi PRIVATE
+    cgia/rsi.asm
+)
