@@ -16,6 +16,10 @@ add_xex(rsi)
 target_sources(rsi PRIVATE
     cgia/rsi.asm
 )
+add_xex(sprites)
+target_sources(sprites PRIVATE
+    cgia/sprites.asm
+)
 
 add_xex(hello_uart)
 target_sources(hello_uart PRIVATE
