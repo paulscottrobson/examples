@@ -18,7 +18,7 @@
         "cwd": "${workspaceFolder}/build"
       },
       "command": "emu",
-      "args": ["-i", "emu.ini", "src/swboy.xex"],
+      "args": ["src/swboy.xex"],
       "problemMatcher": []
     }
   ]

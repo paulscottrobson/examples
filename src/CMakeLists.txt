@@ -3,6 +3,7 @@ include_directories(.)
 add_xex(swboy)
 target_sources(swboy PRIVATE
     cgia/swboy.c
+    reset_vector.asm
 )
 add_xex(raster_bars)
 target_sources(raster_bars PRIVATE

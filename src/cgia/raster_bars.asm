@@ -9,7 +9,7 @@
 
 .segment "CODE"
 
-.define FRAME_DELAY 16
+.define FRAME_DELAY 2
 
 reset:
     sei     ; we do not use interrupts in this demo
