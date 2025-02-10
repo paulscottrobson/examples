@@ -21,6 +21,10 @@ add_xex(sprites)
 target_sources(sprites PRIVATE
     cgia/sprites.asm
 )
+add_xex(sotb)
+target_sources(sotb PRIVATE
+    cgia/sotb.asm
+)
 
 add_xex(hello_uart)
 target_sources(hello_uart PRIVATE
