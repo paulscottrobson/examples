@@ -6,7 +6,8 @@
 ; ../tools/xex-filter.pl -o build/SOTB.xex build/src/sotb.xex src/cgia/data/sotb_layers.xex
 ;
 
-.p816   ; 65816 processor
+.p816       ; 65816 processor
+.smart +    ; 8/16 smart mode
 
 .include "../cgia.asm"
 
@@ -15,44 +16,39 @@
     sta address
 .endmacro
 
+.macro _a8
+    sep #%00100000  ; 8-bit accumulator
+    .a8
+.endmacro
+.macro _a16
+    rep #%00100000  ; 16-bit accumulator
+    .a16
+.endmacro
+
 .segment "INFO"
     .byte "Shadow Of The Beast demo"
 
 .segment "VECTORS"
-    .word 0, 0, 0, 0, 0, 0, 0, 0
-    .word 0, 0, 0, 0, 0, nmi, reset, 0
+    .word 0, 0, 0, 0, 0, nmi, 0, 0
+    .word 0, 0, 0, 0, 0, 0, reset, 0
 
 .zeropage
-.define SCROLL_MAX      $2580 ; 9600
-.define SCROLL_DELTA    3
+.define SCROLL_MAX      $2580   ; 9600
+.define SCROLL_SPEED    3       ; 3
+.define FP_SCALE        128
 
-scroll:             .res 2
-scroll_moon:        .res 1
-offset_moon:        .res 1
-scroll_clouds_01:   .res 1
-offset_clouds_01:   .res 1
-scroll_clouds_02:   .res 1
-offset_clouds_02:   .res 1
-scroll_clouds_03:   .res 1
-offset_clouds_03:   .res 1
-scroll_clouds_04:   .res 1
-offset_clouds_04:   .res 1
-scroll_clouds_05:   .res 1
-offset_clouds_05:   .res 1
-scroll_hills_06:    .res 1
-offset_hills_06:    .res 1
-scroll_grass_07:    .res 1
-offset_grass_07:    .res 1
-scroll_trees_08:    .res 1
-offset_trees_08:    .res 1
-scroll_grass_09:    .res 1
-offset_grass_09:    .res 1
-scroll_grass_10:    .res 1
-offset_grass_10:    .res 1
-scroll_grass_11:    .res 1
-offset_grass_11:    .res 1
-scroll_fence_12:    .res 1
-offset_fence_12:    .res 1
+offset_clouds_01:   .res 2
+offset_clouds_02:   .res 2
+offset_clouds_03:   .res 2
+offset_clouds_04:   .res 2
+offset_clouds_05:   .res 2
+offset_hills_06:    .res 2
+offset_grass_07:    .res 2
+offset_trees_08:    .res 2
+offset_grass_09:    .res 2
+offset_grass_10:    .res 2
+offset_grass_11:    .res 2
+offset_fence_12:    .res 2
 
 .define Y_OFFS  20
 
@@ -71,7 +67,13 @@ dl_offset_3 = $EF00
 
 .code
 reset:
-    sei                     ; disable IRQ
+    sei         ; disable IRQ
+
+    ldx #$FF
+    txs         ; initialize stack pointer
+
+    clc
+    xce         ; switch to native mode
 
     ; disable all planes, so CGIA does not go haywire during reconfiguration
     store #0, CGIA::planes
@@ -123,7 +125,10 @@ cgia_planes:
 
 ; -----------------------------------------------------------------------------
 nmi:
-    pha         ; save accumulator
+    rep #%00110000  ; 16-bit acc and idx
+    pha             ; save accumulator
+    phx             ; we use X for temporary storage
+    sep #%00110000  ; 8-bit acc and idx
 
     lda #CGIA_REG_INT_FLAG_VBI
     bit CGIA::int_status    ; check for Vertical Blank Interrupt
@@ -135,9 +140,23 @@ nmi:
     beq :+                  ; skip to end if not active
     jsr rsi_handler
 :
-    pla         ; restore accumulator
+    rep #%00110000  ; 16-bit acc and idx
+    plx             ; restore X
+    pla             ; restore accumulator
+    _a8
     sta CGIA::int_status    ; ack interrupts
-    rti         ; return from interrupt
+    rti             ; return from interrupt
+
+.macro update_offset offset, width
+    lda offset
+    clc
+    adc #(width * SCROLL_SPEED * FP_SCALE / SCROLL_MAX)
+    cmp #(320 * FP_SCALE)
+    bcc :+
+    sec
+    sbc #(320 * FP_SCALE)
+:   sta offset
+.endmacro
 
 vbi_handler:
     ; restart background color
@@ -147,113 +166,174 @@ vbi_handler:
     ; wait for first line of RSI
     store #Y_OFFS+0, CGIA::int_raster
 
-    ; run the frame counter
-    lda scroll
-    clc
-    adc #SCROLL_DELTA
-    sta scroll
-    lda scroll+1
-    adc #0
-    sta scroll+1
-    cmp #>SCROLL_MAX
-    bcc :+
-    lda scroll
-    cmp #<SCROLL_MAX
-    bcc :+
-    lda #0
-    sta scroll
-    sta scroll+1
-:
+    _a16
+    update_offset offset_clouds_01, 3300
+    update_offset offset_clouds_02, 2700
+    update_offset offset_clouds_03, 2500
+    update_offset offset_clouds_04, 2200
+    update_offset offset_clouds_05, 2000
+    update_offset offset_hills_06, 2700
+    update_offset offset_grass_07, 3400
+    update_offset offset_trees_08, 4500
+    update_offset offset_grass_09, 5400
+    update_offset offset_grass_10, 6800
+    update_offset offset_grass_11, 8200
+    update_offset offset_fence_12, 9600
+
+    _a8
     rts
+
+.macro apply_plane_offset offset, plane
+    _a16
+    lda offset
+    xba     ; we need to divide by FP_SCALE, but instead of shifting right 7 times, we swap the bytes
+    asl A   ; and shift left 1 time
+    adc #0  ; add the shifted left bit back
+    tax     ; store low byte of acc (X is 8 bit) for later
+    lsr A   ; shift right 1 time - we fit in 8 bits now
+    _a8     ; go acc 8 bit
+    lsr A   ; shift two more times
+    lsr A   ; to divide by 8 and get the plane column offset
+    sta plane+CGIA_BCKGND_REGS::offset_x
+    txa     ; now we need to compute negative fine scroll
+    and #%00000111  ; clamp the value to 0-7
+    eor #$FF; negate
+    inc     ; do 2-complement
+    sta plane+CGIA_BCKGND_REGS::scroll_x
+.endmacro
 
 rsi_handler:
     lda CGIA::raster
     cmp #Y_OFFS+0
     bne :+
+        _a16
+        store #0, CGIA::plane0+CGIA_BCKGND_REGS::scroll_x
+        apply_plane_offset offset_clouds_01, CGIA::plane1
+        apply_plane_offset offset_trees_08, CGIA::plane2
+        _a8
         store #Y_OFFS+21, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+21
     bne :+
+        apply_plane_offset offset_clouds_02, CGIA::plane1
+        _a8
         store #Y_OFFS+61, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+61
     bne :+
+        apply_plane_offset offset_clouds_03, CGIA::plane1
+        _a8
         store #Y_OFFS+72, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+72
     bne :+
+        apply_plane_offset offset_hills_06, CGIA::plane0
+        _a8
         store #Y_OFFS+76, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+76
     bne :+
+        _a16
         store #$9b, CGIA::back_color
+        _a8
         store #Y_OFFS+80, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+80
     bne :+
+        apply_plane_offset offset_clouds_04, CGIA::plane1
+        _a8
         store #Y_OFFS+89, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+89
     bne :+
+        apply_plane_offset offset_clouds_05, CGIA::plane1
+        _a8
         store #Y_OFFS+96, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+96
     bne :+
+        apply_plane_offset offset_grass_07, CGIA::plane1
+        _a8
         store #Y_OFFS+103, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+103
     bne :+
+        _a16
         store #$a4, CGIA::back_color
+        _a8
         store #Y_OFFS+117, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+117
     bne :+
+        _a16
         store #$b4, CGIA::back_color
+        _a8
         store #Y_OFFS+127, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+127
     bne :+
+        _a16
         store #$c4, CGIA::back_color
+        _a8
         store #Y_OFFS+135, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+135
     bne :+
+        _a16
         store #$cd, CGIA::back_color
+        _a8
         store #Y_OFFS+142, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+142
     bne :+
+        _a16
         store #$dd, CGIA::back_color
+        _a8
         store #Y_OFFS+148, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+148
     bne :+
+        _a16
         store #$ed, CGIA::back_color
+        _a8
         store #Y_OFFS+154, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+154
     bne :+
+        _a16
         store #$f6, CGIA::back_color
+        _a8
         store #Y_OFFS+158, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+158
     bne :+
+        _a16
         store #$0e, CGIA::back_color
+        _a8
         store #Y_OFFS+175, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+175
     bne :+
+        apply_plane_offset offset_grass_09, CGIA::plane0
+        _a8
         store #Y_OFFS+178, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+178
     bne :+
+        apply_plane_offset offset_fence_12, CGIA::plane1
+        _a8
         store #Y_OFFS+182, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+182
     bne :+
+        apply_plane_offset offset_grass_10, CGIA::plane0
+        _a8
         store #Y_OFFS+189, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+189
     bne :+
+        apply_plane_offset offset_grass_11, CGIA::plane0
+        _a8
+        rts
 :
     rts
