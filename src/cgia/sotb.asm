@@ -200,6 +200,7 @@ vbi_handler:
     eor #$FF; negate
     inc     ; do 2-complement
     sta plane+CGIA_BCKGND_REGS::scroll_x
+    _a8
 .endmacro
 
 rsi_handler:
@@ -207,133 +208,114 @@ rsi_handler:
     cmp #Y_OFFS+0
     bne :+
         _a16
-        store #0, CGIA::plane0+CGIA_BCKGND_REGS::scroll_x
+        store #0, CGIA::plane0+CGIA_BCKGND_REGS::scroll_x ; moon does not move
         apply_plane_offset offset_clouds_01, CGIA::plane1
         apply_plane_offset offset_trees_08, CGIA::plane2
-        _a8
         store #Y_OFFS+21, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+21
     bne :+
         apply_plane_offset offset_clouds_02, CGIA::plane1
-        _a8
         store #Y_OFFS+61, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+61
     bne :+
         apply_plane_offset offset_clouds_03, CGIA::plane1
-        _a8
         store #Y_OFFS+72, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+72
     bne :+
         apply_plane_offset offset_hills_06, CGIA::plane0
-        _a8
         store #Y_OFFS+76, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+76
     bne :+
-        _a16
         store #$9b, CGIA::back_color
-        _a8
         store #Y_OFFS+80, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+80
     bne :+
         apply_plane_offset offset_clouds_04, CGIA::plane1
-        _a8
         store #Y_OFFS+89, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+89
     bne :+
         apply_plane_offset offset_clouds_05, CGIA::plane1
-        _a8
         store #Y_OFFS+96, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+96
     bne :+
         apply_plane_offset offset_grass_07, CGIA::plane1
-        _a8
         store #Y_OFFS+103, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+103
     bne :+
-        _a16
         store #$a4, CGIA::back_color
-        _a8
         store #Y_OFFS+117, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+117
     bne :+
-        _a16
         store #$b4, CGIA::back_color
-        _a8
         store #Y_OFFS+127, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+127
     bne :+
-        _a16
         store #$c4, CGIA::back_color
-        _a8
         store #Y_OFFS+135, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+135
     bne :+
-        _a16
         store #$cd, CGIA::back_color
-        _a8
         store #Y_OFFS+142, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+142
     bne :+
-        _a16
         store #$dd, CGIA::back_color
-        _a8
         store #Y_OFFS+148, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+148
     bne :+
-        _a16
         store #$ed, CGIA::back_color
-        _a8
         store #Y_OFFS+154, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+154
     bne :+
-        _a16
         store #$f6, CGIA::back_color
-        _a8
         store #Y_OFFS+158, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+158
     bne :+
-        _a16
         store #$0e, CGIA::back_color
-        _a8
+        store #Y_OFFS+170, CGIA::int_raster
+        rts
+:   cmp #Y_OFFS+170
+    bne :+
+        store #$41, CGIA::back_color
         store #Y_OFFS+175, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+175
     bne :+
         apply_plane_offset offset_grass_09, CGIA::plane0
-        _a8
         store #Y_OFFS+178, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+178
     bne :+
         apply_plane_offset offset_fence_12, CGIA::plane1
-        _a8
         store #Y_OFFS+182, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+182
     bne :+
         apply_plane_offset offset_grass_10, CGIA::plane0
-        _a8
+        store #Y_OFFS+185, CGIA::int_raster
+        rts
+:   cmp #Y_OFFS+185
+    bne :+
+        store #$40, CGIA::back_color
         store #Y_OFFS+189, CGIA::int_raster
         rts
 :   cmp #Y_OFFS+189
     bne :+
         apply_plane_offset offset_grass_11, CGIA::plane0
-        _a8
         rts
 :
     rts
