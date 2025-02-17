@@ -5,6 +5,23 @@
 ; Then do something like this:
 ; ../tools/xex-filter.pl -o build/SOTB.xex build/src/sotb.xex src/cgia/data/sotb_layers.xex src/cgia/data/sotb_sprite.xex
 ;
+; This demo showcases:
+; - 65816 Native mode programming
+; - Dealing with 16-bit numbers and registers
+; - VBI (Vertical Blank Interrupt) screen update (the main_loop equivalent)
+; - RSI (RaSter Interrupt) screen splits - the meat of parallax scroller
+; - how to distinguish the source of NMI interrupt and how to ACK interrupts
+; - configuring separate background bank and sprite bank
+;   (the scrolling background layers take so much memory, that sprites cannot fit-in)
+; - four graphics planes configured: 3 background planes and one sprite plane
+; - background planes are configured with separate display list each
+; - a sprite-descriptors array is created in bank 1 and configured in sprite plane
+; - 9.7 and 8.8 fixed point number handling using 16bit operations
+; - byte mangling using A/B register swap
+; - fine scrolling using 16bit numbers unfolded to scroll_x and offset_x registers
+; - use of math accelerator to do complex 16 bit multiplication (to get sprite frame offset)
+; - XEX loader feature allowing to load data to any given bank.
+;   (writing a 1-byte block to $FFFE changes the load-bank)
 
 .p816       ; 65816 processor
 .smart +    ; 8/16 smart mode
@@ -234,8 +251,6 @@ vbi_handler:
     clc
     adc #spr_1_data
     sta spr_desc+$10+12 ; set frame address to sprite 1 data pointer
-
-
 
     _a8
     rts
