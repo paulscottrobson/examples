@@ -87,6 +87,8 @@ sprites_loop:
     sta sprite_descriptors, x   ; flags
     inx
 
+    inx     ; reserved
+
     lda #SPRITE_COLOR_1
     sta sprite_descriptors, x   ; color 01
     inx
@@ -99,7 +101,6 @@ sprites_loop:
     sta sprite_descriptors, x   ; color 11
     inx
 
-    inx     ; reserved
     inx     ; reserved
 
     lda #<sprite_data
