@@ -7,6 +7,10 @@ project(x65-examples ASM C)
 
 function(ADD_XEX executable_name)
     add_executable(${executable_name})
+    target_compile_options(${executable_name} PUBLIC
+        -C ${CMAKE_SOURCE_DIR}/x65.cfg
+        -Wa --listing,${CMAKE_CURRENT_BINARY_DIR}/${executable_name}.lst
+    )
     target_link_options(${executable_name} PUBLIC
         -C ${CMAKE_SOURCE_DIR}/x65.cfg
         -Ln ${CMAKE_CURRENT_BINARY_DIR}/${executable_name}.lab

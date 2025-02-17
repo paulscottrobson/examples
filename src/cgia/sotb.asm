@@ -3,7 +3,7 @@
 ; In order to have a working X65 ROM file, you need to merge it with
 ; image data blocks. See src/cgia/data/bins.c to generate it.
 ; Then do something like this:
-; ../tools/xex-filter.pl -o build/SOTB.xex build/src/sotb.xex src/cgia/data/sotb_layers.xex
+; ../tools/xex-filter.pl -o build/SOTB.xex build/src/sotb.xex src/cgia/data/sotb_layers.xex src/cgia/data/sotb_sprite.xex
 ;
 
 .p816       ; 65816 processor
@@ -35,7 +35,12 @@
 .zeropage
 .define SCROLL_MAX      $2580   ; 9600
 .define SCROLL_SPEED    3       ; 3
+.define Y_OFFS          20
 .define FP_SCALE        128
+.define SPRITE_X        180
+sprite_y = 125+Y_OFFS
+.define SPRITE_Y        sprite_y
+.define SPRITE_HEIGHT   52
 
 offset_clouds_01:   .res 2
 offset_clouds_02:   .res 2
@@ -49,8 +54,7 @@ offset_grass_09:    .res 2
 offset_grass_10:    .res 2
 offset_grass_11:    .res 2
 offset_fence_12:    .res 2
-
-.define Y_OFFS  20
+sprite_frame:       .res 2
 
 video_offset_1 = $1000
 color_offset_1 = $5000
@@ -64,6 +68,10 @@ video_offset_3 = $B000
 color_offset_3 = $F000
 bkgnd_offset_3 = $F800
 dl_offset_3 = $EF00
+
+spr_0_data = $A000
+spr_1_data = $8000
+spr_desc = $010000  ; sprite descriptors address in sprite bank
 
 .code
 reset:
@@ -80,6 +88,13 @@ reset:
 
     ; set border/background color
     store #145, CGIA::back_color
+
+    ; backgrounds are in bank 00
+    lda #0
+    sta CGIA::bckgnd_bank
+    ; sprites are in bank 01
+    lda #1
+    sta CGIA::sprite_bank
 
     ; configure plane display lists
     lda #<dl_offset_1
@@ -101,6 +116,17 @@ pl_loop:
     sta CGIA::plane0, x
     dex
     bpl pl_loop
+    ; set sprite descriptors address
+    lda #0
+    sta CGIA::offset3
+    sta CGIA::offset3 + 1
+    ; copy sprite descriptors
+    ldx #(2*16)-1
+sp_loop:
+    lda sprite_descriptors, x
+    sta spr_desc, x
+    dex
+    bpl sp_loop
 
     ; --- setup CGIA interrupts
     lda #Y_OFFS
@@ -110,7 +136,7 @@ pl_loop:
     sta CGIA::int_enable    ; trigger NMI on VBL and raster line
 
     ; --- activate planes
-    store #%00000111, CGIA::planes
+    store #%10001111, CGIA::planes
 
 forever:
     jmp forever ; do nothing more
@@ -121,7 +147,12 @@ cgia_planes:
     .byte PF1,4,7,80,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; bg1
     .byte PF1,4,7,80,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; bg2
     .byte PF2,4,7,80,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; bg3
-    .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; sprites
+    .byte $03,$00,$00,(SPRITE_Y+SPRITE_HEIGHT-1),$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; sprites
+sprite_descriptors:
+    .byte <SPRITE_X,>SPRITE_X,<SPRITE_Y,>SPRITE_Y,<SPRITE_HEIGHT,>SPRITE_HEIGHT,7|SPRITE_MASK_MULTICOLOR,$00
+    .byte $0A,$6A,$06,$00,<spr_0_data,>spr_0_data,$00,$00
+    .byte <SPRITE_X,>SPRITE_X,<SPRITE_Y,>SPRITE_Y,<SPRITE_HEIGHT,>SPRITE_HEIGHT,7|SPRITE_MASK_MULTICOLOR,$00
+    .byte $99,$9A,$9B,$00,<spr_1_data,>spr_1_data,$10,$00
 
 ; -----------------------------------------------------------------------------
 nmi:
@@ -179,6 +210,32 @@ vbi_handler:
     update_offset offset_grass_10, 6800
     update_offset offset_grass_11, 8200
     update_offset offset_fence_12, 9600
+
+    ; update_sprite_frame
+    lda sprite_frame
+    clc
+    adc #((SCROLL_MAX / 20) * SCROLL_SPEED * 256 / SCROLL_MAX)
+    cmp #(6 * 256)
+    bcc :+
+    sec
+    sbc #(6 * 256)
+:   sta sprite_frame
+    xba
+    and #$FF
+    ; multiply
+    sta $FFC0   ; store in OPERA of math accelerator
+    lda #8*SPRITE_HEIGHT ; 8 bytes per sprite line
+    sta $FFC2   ; store in OPERB of math accelerator
+    lda $FFC4   ; get MULAB result from math accelerator
+    clc
+    adc #spr_0_data
+    sta spr_desc+12 ; set frame address to sprite 0 data pointer
+    lda $FFC4   ; get MULAB result again
+    clc
+    adc #spr_1_data
+    sta spr_desc+$10+12 ; set frame address to sprite 1 data pointer
+
+
 
     _a8
     rts

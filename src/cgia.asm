@@ -113,8 +113,9 @@
     pos_y   .word
     lines_y .word
     flags   .byte
+            .byte           ; reserved
     color   .byte 3
-            .byte 2         ; reserved
+            .byte           ; reserved
     data_offset     .word
     next_dsc_offset .word   ; after passing lines_y, reload sprite descriptor data
                             ; this is a built-in sprite multiplexer

@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "./beast-1.h"
+#include "./beast-2.h"
 #include "./example_data.h"
 #include "./sotb-1.h"
 #include "./sotb-2.h"
@@ -133,6 +135,19 @@ int main(void)
     fput_header(dl_offset_3, NELEMS(display_list_3), file);
     for (size_t i = 0; i < NELEMS(display_list_3); ++i)
         fputc(display_list_3[i], file);
+    fclose(file);
+
+    file = fopen("sotb_sprite.xex", "w");
+    assert(file);
+    fputw(0xffff, file);
+    fput_header(0xfffe, 1, file); // change load bank
+    fputc(0x01, file);
+    fput_header(spr1_offset, NELEMS(spr_bitmap1_data), file);
+    for (size_t i = 0; i < NELEMS(spr_bitmap1_data); ++i)
+        fputc(spr_bitmap1_data[i], file);
+    fput_header(spr2_offset, NELEMS(spr_bitmap2_data), file);
+    for (size_t i = 0; i < NELEMS(spr_bitmap2_data); ++i)
+        fputc(spr_bitmap2_data[i], file);
     fclose(file);
 
     return 0;
