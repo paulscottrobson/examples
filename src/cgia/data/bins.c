@@ -8,6 +8,8 @@
 #include "./beast-1.h"
 #include "./beast-2.h"
 #include "./example_data.h"
+#include "./hi-octane_hud.h"
+#include "./mascot_bg.h"
 #include "./sotb-1.h"
 #include "./sotb-2.h"
 #include "./sotb-3.h"
@@ -52,6 +54,14 @@ int main(void)
     fput_header(mixed_mode_dl_offset, NELEMS(mixed_mode_dl), file);
     for (size_t i = 0; i < NELEMS(mixed_mode_dl); ++i)
         fputc(mixed_mode_dl[i], file);
+    fclose(file);
+
+    file = fopen("mascot_bg.xex", "w");
+    assert(file);
+    fputw(0xffff, file);
+    fput_header(affine_mode_video_offset, NELEMS(pixel_data), file);
+    for (size_t i = 0; i < NELEMS(pixel_data); ++i)
+        fputc(pixel_data[i], file);
     fclose(file);
 
     file = fopen("text_mode_cl.xex", "w");
@@ -148,6 +158,23 @@ int main(void)
     fput_header(spr2_offset, NELEMS(spr_bitmap2_data), file);
     for (size_t i = 0; i < NELEMS(spr_bitmap2_data); ++i)
         fputc(spr_bitmap2_data[i], file);
+    fclose(file);
+
+    file = fopen("hud_layer.xex", "w");
+    assert(file);
+    fputw(0xffff, file);
+    fput_header(video_offset, NELEMS(bitmap_data), file);
+    for (size_t i = 0; i < NELEMS(bitmap_data); ++i)
+        fputc(bitmap_data[i], file);
+    fput_header(color_offset, NELEMS(color_data), file);
+    for (size_t i = 0; i < NELEMS(color_data); ++i)
+        fputc(color_data[i], file);
+    fput_header(bkgnd_offset, NELEMS(bkgnd_data), file);
+    for (size_t i = 0; i < NELEMS(bkgnd_data); ++i)
+        fputc(bkgnd_data[i], file);
+    fput_header(dl_offset, NELEMS(display_list), file);
+    for (size_t i = 0; i < NELEMS(display_list); ++i)
+        fputc(display_list[i], file);
     fclose(file);
 
     return 0;

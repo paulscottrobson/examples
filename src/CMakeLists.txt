@@ -30,6 +30,10 @@ add_xex(sotb)
 target_sources(sotb PRIVATE
     cgia/sotb.asm
 )
+add_xex(mixed_modes)
+target_sources(mixed_modes PRIVATE
+    cgia/mixed_modes.asm
+)
 
 add_xex(hello_uart)
 target_sources(hello_uart PRIVATE

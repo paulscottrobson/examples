@@ -27,20 +27,7 @@
 .smart +    ; 8/16 smart mode
 
 .include "../cgia.asm"
-
-.macro store value, address
-    lda value
-    sta address
-.endmacro
-
-.macro _a8
-    sep #%00100000  ; 8-bit accumulator
-    .a8
-.endmacro
-.macro _a16
-    rep #%00100000  ; 16-bit accumulator
-    .a16
-.endmacro
+.include "../macros.asm"
 
 .segment "INFO"
     .byte "Shadow Of The Beast demo"
