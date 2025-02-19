@@ -35,6 +35,11 @@ target_sources(mixed_modes PRIVATE
     cgia/mixed_modes.asm
 )
 
+add_xex(pwm_samples)
+target_sources(pwm_samples PRIVATE
+    cgia/pwm_samples.asm
+)
+
 add_xex(hello_uart)
 target_sources(hello_uart PRIVATE
     uart/hello.asm

@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "./audio_data.h"
 #include "./beast-1.h"
 #include "./beast-2.h"
 #include "./example_data.h"
@@ -175,6 +176,14 @@ int main(void)
     fput_header(dl_offset, NELEMS(display_list), file);
     for (size_t i = 0; i < NELEMS(display_list); ++i)
         fputc(display_list[i], file);
+    fclose(file);
+
+    file = fopen("pwm_samples.xex", "w");
+    assert(file);
+    fputw(0xffff, file);
+    fput_header(0x1000, NELEMS(audio_data), file);
+    for (size_t i = 0; i < NELEMS(audio_data); ++i)
+        fputc((uint8_t)(128 + (int8_t)audio_data[i]), file);
     fclose(file);
 
     return 0;
