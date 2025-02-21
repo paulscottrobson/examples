@@ -39,6 +39,10 @@ add_xex(pwm_samples)
 target_sources(pwm_samples PRIVATE
     cgia/pwm_samples.asm
 )
+add_xex(opl)
+target_sources(opl PRIVATE
+    sound/opl.asm
+)
 
 add_xex(hello_uart)
 target_sources(hello_uart PRIVATE

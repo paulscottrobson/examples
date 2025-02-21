@@ -18,7 +18,7 @@
         "cwd": "${workspaceFolder}/build"
       },
       "command": "emu",
-      "args": ["pwm_samples.xex"],
+      "args": ["src/opl.xex"],
       "problemMatcher": []
     }
   ]
