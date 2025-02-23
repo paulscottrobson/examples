@@ -48,3 +48,8 @@ add_xex(hello_uart)
 target_sources(hello_uart PRIVATE
     uart/hello.asm
 )
+
+add_xex(gpio)
+target_sources(gpio PRIVATE
+    io/gpio.asm
+)
