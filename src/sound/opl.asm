@@ -1,25 +1,25 @@
 ; Written by https://github.com/karmic64/64vgmplay
 ; ca64 port for X65 by smoku
 
-/*
-# 64vgmplay
-OPL1/2 VGM converter/player for SFX Sound Expander/FM-YAM.
-
-Making a C64 executable is a multi-step process:
-- First, run the "convert" utility, which will create an `.include`able file from a VGM file for use with the assembler. `convert vgmname outname`
-- Now, take a look at the bottom of the assembly file, and change the filename after `.include` to the name of the file you just exported. Assemble the file with 64tass.
-- You should probably crunch it now with Exomizer or something else. Start address is $080d.
-
-Your VGM file must use at least one OPL1 or OPL2 to be usable. If more than one chip fits these qualifications, you will be given a choice of which one to log. Any other chips' commands will simply be ignored.
-
-Remember to have an SFX Sound Expander/FM-YAM enabled in your emulator/plugged into your machine when you run the file.
-
-Remember that there is only 64k of space available to the C64- if the assembler warns you about processor program counter overflow, your VGM is too large. There is no compression per se, but the data format used by the player will result in data that is about 3/4 the size of the VGM, for any standard single-chip VGM. So, be careful with any files above around 70kb.
-
-This play routine is only intended to generate standalone executables, not for demos. If you want to use FM-enhanced music in a production, consider the Edlib D00 player by Mr. Mouse.
-*/
+; # 64vgmplay
+; OPL1/2 VGM converter/player for SFX Sound Expander/FM-YAM.
+;
+; Making a C64 executable is a multi-step process:
+; - First, run the "convert" utility, which will create an `.include`able file from a VGM file for use with the assembler. `convert vgmname outname`
+; - Now, take a look at the bottom of the assembly file, and change the filename after `.include` to the name of the file you just exported. Assemble the file with 64tass.
+; - You should probably crunch it now with Exomizer or something else. Start address is $080d.
+;
+; Your VGM file must use at least one OPL1 or OPL2 to be usable. If more than one chip fits these qualifications, you will be given a choice of which one to log. Any other chips' commands will simply be ignored.
+;
+; Remember to have an SFX Sound Expander/FM-YAM enabled in your emulator/plugged into your machine when you run the file.
+;
+; Remember that there is only 64k of space available to the C64- if the assembler warns you about processor program counter overflow, your VGM is too large. There is no compression per se, but the data format used by the player will result in data that is about 3/4 the size of the VGM, for any standard single-chip VGM. So, be careful with any files above around 70kb.
+;
+; This play routine is only intended to generate standalone executables, not for demos. If you want to use FM-enhanced music in a production, consider the Edlib D00 player by Mr. Mouse.
+;
 
 .include "../cgia.asm"
+.include "../ria.asm"
 
 HAS_LOOP = 2
 
@@ -42,20 +42,10 @@ irqy    .res 1
 irq1    .res 1
 .endstruct
 
-RIA_EXTIO = $FFF6
-
 OPL2_ADDR = $FC00
 OPL2_DATA = $FC01
 OPL3_ADDR = $FC02
 OPL3_DATA = $FC03
-
-CIA_TA_LO = $FF98
-CIA_TA_HI = $FF99
-CIA_TB_LO = $FF9A
-CIA_TB_HI = $FF9B
-CIA_ICR   = $FF9D
-CIA_CRA   = $FF9E
-CIA_CRB   = $FF9F
 
 SCREEN    = $0100
 
@@ -67,7 +57,7 @@ CLOCK = 1000000 ;X65
 
 .code
             lda #$7f
-            sta CIA_ICR
+            sta TIMERS::icr
             lda #<nmi
             sta $fffa
             lda #>nmi
@@ -79,7 +69,7 @@ CLOCK = 1000000 ;X65
             
             ; enable EXTIO bank0 (OPL3)
             ldx #1
-            stx RIA_EXTIO
+            stx RIA::extio
             
             ldx #0
             txa
@@ -119,25 +109,25 @@ CLOCK = 1000000 ;X65
             sta waitcnt
             
             lda #<(CLOCK/44100) * 2
-            sta CIA_TA_LO
+            sta TIMERS::ta_lo
             lda #>(CLOCK/44100) * 2
-            sta CIA_TA_HI
+            sta TIMERS::ta_hi
             lda waitdata
-            sta CIA_TB_LO
+            sta TIMERS::tb_lo
             lda waitdata+1
-            sta CIA_TB_HI
+            sta TIMERS::tb_hi
             lda #$11 ;tma runs every cycle
-            sta CIA_CRA
+            sta TIMERS::cra
             lda #$51 ;tmb runs every xx samples
-            sta CIA_CRB
+            sta TIMERS::crb
             lda waitdata+2 ;set wait period for next cycle
-            sta CIA_TB_LO
+            sta TIMERS::tb_lo
             lda waitdata+3
-            sta CIA_TB_HI
+            sta TIMERS::tb_hi
             
-            lda CIA_ICR
+            lda TIMERS::icr
             lda #$82
-            sta CIA_ICR
+            sta TIMERS::icr
             cli
             
             
@@ -205,9 +195,9 @@ mainloop:   lda #0
             
             
             
-:           lda CIA_TB_LO
+:           lda TIMERS::tb_lo
             pha
-            lda CIA_TB_HI
+            lda TIMERS::tb_hi
             tax
             and #$0f
             tay
@@ -289,10 +279,10 @@ irq:        sta irqa
             ora (waitptr),y
             beq _loop
             lda (waitptr),y
-            sta CIA_TB_HI
+            sta TIMERS::tb_hi
             dey
             lda (waitptr),y
-            sta CIA_TB_LO
+            sta TIMERS::tb_lo
             lda #2
             clc
             adc waitptr
@@ -302,9 +292,9 @@ irq:        sta irqa
             bcs _end
 _loop:      .if HAS_LOOP
                 lda waitdata_loop
-                sta CIA_TB_LO
+                sta TIMERS::tb_lo
                 lda waitdata_loop+1
-                sta CIA_TB_HI
+                sta TIMERS::tb_hi
                 lda #<waitdata_loop+2
                 sta waitptr
                 lda #>waitdata_loop+2
@@ -312,11 +302,11 @@ _loop:      .if HAS_LOOP
                 ;bne _end
             .else
                 lda #$7f
-                sta CIA_ICR
+                sta TIMERS::icr
                 ;bpl _end
             .endif
 _end:       inc waitcnt
-            lda CIA_ICR
+            lda TIMERS::icr
             lda irqa
             ldy irqy
 nmi:        rti

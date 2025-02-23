@@ -48,11 +48,11 @@ reset:
     lda #$FF00  ; base freq is 65280 Hz - outside hearing range
     sta CGIA::pwm0+CGIA_PWM::freq
 
-    lda ria_time_tm
+    lda RIA::tm
     sta $00         ; init time tracker
 
 loop:
-    lda ria_time_tm
+    lda RIA::tm
     sec
     sbc $00         ; compute delta (modulo)
     cmp #sample_period
