@@ -40,8 +40,8 @@
     nmi_n       .addr
 
     ; Interrupt Control
-    int_ctl     .byte
-    int_en      .byte
+    irq_status  .byte
+    irq_enable  .byte
 
     ; CPU Vector Native
     irq_n       .addr

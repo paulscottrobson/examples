@@ -13,6 +13,9 @@
 .code
         cli     ; enable IRQ
 
+        lda #%00000010  ; enable IO interrupts
+        sta RIA::irq_enable
+
 loop:
         lda GPIO::in0
         sta $10
@@ -22,6 +25,7 @@ loop:
 
 irq:
         inc $12
-        lda GPIO::in0
-        lda GPIO::in1
+        lda GPIO::in0           ; ACK Port0 interrupt
+        lda GPIO::in1           ; ACK Port1 interrupt
+        sta RIA::irq_status     ; ACK in Interrupt Controller
         rti

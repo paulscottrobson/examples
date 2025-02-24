@@ -58,6 +58,8 @@ CLOCK = 1000000 ;X65
 .code
             lda #$7f
             sta TIMERS::icr
+            lda #$01
+            sta RIA::irq_enable
             lda #<nmi
             sta $fffa
             lda #>nmi
@@ -309,6 +311,7 @@ _end:       inc waitcnt
             lda TIMERS::icr
             lda irqa
             ldy irqy
+            sta RIA::irq_status
 nmi:        rti
             
             
