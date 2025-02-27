@@ -23,8 +23,22 @@ reset:
     xba
     lda #0
     xba
+    ; wai
+
+    ora $12,s
+    lda ($23)
+    pea $1234
+    pei ($78)
+    per reset
+
+    bra :+
+    jml ($ABCD)
+:   lda [$34]
+    lda [$56],y
+    lda ($34,s),y
 
     ldx #15
+    brl loop
 loop:
     lda numbers,x
     sta source,x
