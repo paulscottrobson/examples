@@ -18,7 +18,7 @@ INX        ; X = X + 1
 CMP #$00   ; if A - 0 ...
 BNE loop   ; ... != 0 goto loop
 LDA #$FF   ; A = 255, OS exit()
-STA $FFF1  ; Halt 6502
+STA $FFF1  ; Halt CPU
 text:
 .BYTE "Hello, World!"
 .BYTE $0D, $0A, $00

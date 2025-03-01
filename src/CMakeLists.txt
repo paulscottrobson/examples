@@ -53,3 +53,10 @@ add_xex(gpio)
 target_sources(gpio PRIVATE
     io/gpio.asm
 )
+
+add_xex(sieve)
+target_sources(sieve PRIVATE
+    bench/sieve.c
+    reset_vector.asm
+)
+target_compile_options(sieve PUBLIC -O)
