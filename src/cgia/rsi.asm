@@ -27,8 +27,8 @@ nmi:
     lda #$6b    ; green color
     sta CGIA::back_color
 
-wait:
     lda #96
+wait:
     cmp CGIA::raster    ; wait for raster line 96
     bne wait
 

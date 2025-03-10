@@ -34,6 +34,10 @@ add_xex(mixed_modes)
 target_sources(mixed_modes PRIVATE
     cgia/mixed_modes.asm
 )
+add_xex(lkhs_raster_bar)
+target_sources(lkhs_raster_bar PRIVATE
+    cgia/lkhs_raster_bar.asm
+)
 
 add_xex(pwm_samples)
 target_sources(pwm_samples PRIVATE
