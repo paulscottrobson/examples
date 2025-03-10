@@ -117,7 +117,7 @@ union cgia_plane_regs_t
 
 #define CGIA_PLANES                 (4)
 #define CGIA_AFFINE_FRACTIONAL_BITS (8)
-#define CGIA_MAX_DL_INSTR           (32)
+#define CGIA_MAX_DL_INSTR_PER_LINE  (32)
 
 // plane flags:
 // 0 - color 0 is transparent
