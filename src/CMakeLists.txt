@@ -38,6 +38,10 @@ add_xex(lkhs_raster_bar)
 target_sources(lkhs_raster_bar PRIVATE
     cgia/lkhs_raster_bar.asm
 )
+add_xex(four_byte_burger)
+target_sources(four_byte_burger PRIVATE
+    cgia/four_byte_burger.asm
+)
 
 add_xex(pwm_samples)
 target_sources(pwm_samples PRIVATE
