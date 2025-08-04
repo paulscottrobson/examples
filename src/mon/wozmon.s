@@ -74,6 +74,7 @@ NEXTHEX:        LDA IN,Y        ; Get character for hex test.
                 EOR #$30        ; Map digits to $0-9.
                 CMP #$0A        ; Digit?
                 BCC DIG         ; Yes.
+                ORA #$20        ; Force Upper-Case
                 ADC #$88        ; Map letter "A"-"F" to $FA-FF.
                 CMP #$FA        ; Hex letter?
                 BCC NOTHEX      ; No, character not hex.
