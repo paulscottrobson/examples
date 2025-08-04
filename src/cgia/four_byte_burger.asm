@@ -9,6 +9,7 @@
 ; This demo showcases:
 ; - Editing the display list during vertical blank period
 ; - Scrolling the screen by editing image offset in display list
+; - Line doubling using display list instructions
 ;
 ; Four-Byte Burger image courtesy of Senn (@senn_twt)
 ; https://x.com/senn_twt/status/1670246393095639041
