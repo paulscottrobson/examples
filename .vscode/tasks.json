@@ -18,7 +18,7 @@
         "cwd": "${workspaceFolder}/build"
       },
       "command": "emu",
-      "args": ["src/opl.xex"],
+      "args": ["src/wozmon.xex"],
       "problemMatcher": []
     }
   ]

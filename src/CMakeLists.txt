@@ -68,3 +68,10 @@ target_sources(sieve PRIVATE
     reset_vector.asm
 )
 target_compile_options(sieve PUBLIC -O)
+
+add_xex(wozmon)
+target_sources(wozmon PRIVATE
+    mon/wozmon.s
+    reset_vector.asm
+)
+target_link_options(wozmon PUBLIC --start-addr $F000)
