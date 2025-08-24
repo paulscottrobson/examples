@@ -1,2 +1,6 @@
 /build/
 /.cache/
+*.lst
+*.xex
+dap.log
+65816

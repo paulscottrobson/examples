@@ -25,6 +25,8 @@ reset:
     xba
     ; wai
 
+    nop
+    
     ora $12,s
     lda ($23)
     pea $1234
