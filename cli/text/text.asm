@@ -4,6 +4,17 @@
 ;
 ; **************************************************************************************
 
+        textWidth  = 48
+        textHeight = 30
+        textSize   = textWidth * textHeight
+
+        dispCharacters = $4000
+        dispForeground = dispCharacters + $0800
+        dispBackground = dispCharacters + $1000
+        dispFontData   = dispCharacters + $1800
+
+        .include    "text.inc"
+
         .autsiz                                     ; generate code based on last REP/SEP
 ;
 ;       Start code at $200 (e.g. above zero page and stack)
@@ -15,44 +26,6 @@ ProgramStart = $200
         .word   ProgramStart                        ; first byte to copy
         .word   ProgramEnd-1                        ; last byte to copy
 
-dspl_text_buffer = $4000
-dspl_fg_buffer = dspl_text_buffer + $1000
-dspl_bg_buffer = dspl_fg_buffer   + $1800
-dspl_chargen   = dspl_text_buffer + $2000
-
-dspl_buffer_width  = 48
-dspl_buffer_height = 30
-dspl_buffer_size   = dspl_buffer_width * dspl_buffer_height
-
-CGIA_DL_IN_EMPTY_LINE = $00
-CGIA_DL_IN_DUPL_LINE  = $01
-CGIA_DL_IN_JUMP       = $02
-CGIA_DL_IN_LOAD_SCAN  = $03
-CGIA_DL_IN_LMS  = %00010000
-CGIA_DL_IN_LFS  = %00100000
-CGIA_DL_IN_LBS  = %01000000
-CGIA_DL_IN_LCG  = %10000000
-CGIA_DL_IN_VBL  = %10000000
-
-CGIA_DL_IN_MODE2      = $0A
-CGIA_DL_IN_MODE3      = $0B
-CGIA_DL_IN_MODE4      = $0C
-CGIA_DL_IN_MODE5      = $0D
-CGIA_DL_IN_MODE6      = $0E
-CGIA_DL_IN_MODE7      = $0F
-
-RIA = $FFC0
-RIA_Stack = RIA + $30
-RIA_Op = RIA + $31
-
-CGIA = $FF00
-CGIA_Mode = CGIA
-CGIA_Planes = CGIA+$30
-CGIA_Offset0 = CGIA+$38
-CGIA_Plane0 = CGIA+$40
-CGIAP_RowHeight = 2
-
-RIA_API_GET_CHARGEN = $10
 
 ;
 ;       This is the main code block.
@@ -62,67 +35,65 @@ RIA_API_GET_CHARGEN = $10
 
         sep     #$30                                ; 8 bit AXY
 
-        ; initialize CGIA
-        stz CGIA_Mode
-        stz CGIA_Planes
 
-        ; clear all CGIA registers
-        ldx #$7F
+        stz     CGIA_Mode                           ; initialize CGIA
+        stz     CGIA_Planes
+
+        
+        ldx     #$7F                                ; clear all CGIA registers
 _ClearCGIA:
         stz     CGIA,x
         dex
         bpl     _ClearCGIA
 
-
-        ; fetch character generator from RIA firmware
-        phb
+        phb                                         ; fetch character generator from RIA firmware
         pla
-        sta RIA_Stack          ; bank address
-        lda #>dspl_chargen      ; high byte
-        sta RIA_Stack
-        lda #<dspl_chargen      ; low byte
-        sta RIA_Stack
-        lda #RIA_API_GET_CHARGEN
-        sta RIA_Op
+        sta     RIA_Stack                           ; bank address
+        lda     #>dispFontData                      ; high byte
+        sta     RIA_Stack
+        lda     #<dispFontData                      ; low byte
+        sta     RIA_Stack
+        lda     #RIA_API_GET_CHARGEN                ; execute get font.
+        sta     RIA_Op
 
-        sep     #$20
+        sep     #$20                                ; X 16 A 8
         rep     #$10
-        ldx     #dspl_buffer_size-1
+        ldx     #textSize-1                         ; fill with test text.
 _FillMe:
         txa     
-        sta     dspl_text_buffer,x
-        sta     dspl_fg_buffer,x
+        sta     dispCharacters,x
+        sta     dispForeground,x
         eor     #$44
-        sta     dspl_bg_buffer,x
+        sta     dispBackground,x
         dex
         bne     _FillMe        
 
-        ; set display list offset
-        rep     #$30
+        
+        rep     #$30                                ; set display list offset
         lda     #dspl_display_list
         sta     CGIA_Offset0
 
         sep     #$30
-        ; set row height to 8 pixels
-        lda #7
-        sta CGIA_Plane0+CGIAP_RowHeight
-        ; and finally enable the plane
-        lda #%00000001
-        sta CGIA_Planes
+        
+        lda     #7                                  ; set row height to 8 pixels
+        sta     CGIA_Plane0+CGIAP_RowHeight
+
+        lda     #%00000001                          ; and finally enable the plane
+        sta     CGIA_Planes
 
 h1:     jmp     h1
 
 dspl_display_list:
-        .byte CGIA_DL_IN_LOAD_SCAN | CGIA_DL_IN_LMS|CGIA_DL_IN_LFS|CGIA_DL_IN_LBS|CGIA_DL_IN_LCG
-        .word dspl_text_buffer
-        .word dspl_fg_buffer
-        .word dspl_bg_buffer
-        .word dspl_chargen
-        .rept 30
-        .byte CGIA_DL_IN_MODE2
+        .byte   CGIA_DL_IN_LOAD_SCAN | CGIA_DL_IN_LMS|CGIA_DL_IN_LFS|CGIA_DL_IN_LBS|CGIA_DL_IN_LCG
+        .word   dispCharacters
+        .word   dispForeground
+        .word   dispBackground
+        .word   dispFontData
+        .rept   30
+        .byte   CGIA_DL_IN_MODE2
         .endrept
-        .byte CGIA_DL_IN_JUMP | CGIA_DL_IN_VBL
-        .word dspl_display_list
+        .byte   CGIA_DL_IN_JUMP | CGIA_DL_IN_VBL
+        .word   dspl_display_list
 
 ProgramEnd:
     
@@ -131,5 +102,6 @@ ProgramEnd:
 ;
         .word   $FFE0
         .word   $FFFF
-        .word 0, 0, 0, 0, 0, 0, 0, 0
-        .word 0, 0, 0, 0, 0, 0, ProgramStart, 0
+        .word   0, 0, 0, 0, 0, 0, 0, 0
+        .word   0, 0, 0, 0, 0, 0, ProgramStart, 0
+        
