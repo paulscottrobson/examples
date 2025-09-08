@@ -22,7 +22,7 @@ assemble:
 #		Run program without break.
 #
 run: assemble
-	x65emu -q file=test.xex	
+	$(EMULATOR) -q file=test.xex	
 
 #
 #		Run program and break on 65816 NOP ($EA)
