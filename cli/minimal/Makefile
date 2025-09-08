@@ -28,4 +28,4 @@ run: assemble
 #		Run program and break on 65816 NOP ($EA)
 #
 runbrk: assemble
-	x65emu -q file=test.xex break=EA
+	$(EMULATOR) -q file=test.xex break=EA
