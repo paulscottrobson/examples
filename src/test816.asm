@@ -24,7 +24,7 @@ reset:
     lda #0
     xba
     ; wai
-    
+
     ora $12,s
     lda ($23)
     pea $1234
